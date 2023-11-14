@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,17 +20,10 @@ func validateISBN(isbn string) error {
 	return nil
 }
 
-func createBook() (Book, error) {
-	var title, author, isbn string
-
-	fmt.Print("Enter Book Title: ")
-	fmt.Scanln(&title)
-
-	fmt.Print("Enter Author: ")
-	fmt.Scanln(&author)
-
-	fmt.Print("Enter ISBN: ")
-	fmt.Scanln(&isbn)
+func createBook(c *gin.Context) (Book, error) {
+	title := c.PostForm("title")
+	author := c.PostForm("author")
+	isbn := c.PostForm("isbn")
 
 	err := validateISBN(isbn)
 	if err != nil {
@@ -43,16 +35,17 @@ func createBook() (Book, error) {
 
 func main() {
 	router := gin.Default()
-	router.LoadHTMLGlob("templates/*")
 
 	var library []Book
+
+	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{"library": library})
 	})
 
 	router.POST("/add", func(c *gin.Context) {
-		book, err := createBook()
+		book, err := createBook(c)
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": err.Error()})
 			return
